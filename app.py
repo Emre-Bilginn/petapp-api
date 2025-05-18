@@ -54,6 +54,11 @@ def predict():
 
     return jsonify({'class': predicted_class})
 
+# 🏠 Ana sayfa endpoint'i
+@app.route("/", methods=["GET"])
+def home():
+    return "✅ PetApp API çalışıyor. Görsel tahmini için POST isteği ile /predict endpoint'ini kullanın.", 200
+
 # 🚀 Flask sunucusunu başlat
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
