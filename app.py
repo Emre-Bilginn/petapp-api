@@ -8,7 +8,7 @@ from flask import Flask, request, jsonify
 app = Flask(__name__)
 
 MODEL_PATH = "pet_disease_model_mobile.pt"
-GOOGLE_DRIVE_FILE_ID = "1ayYyuPtb5Nopr5iOMCTuRWfwlL2d8SWb"
+GOOGLE_DRIVE_FILE_ID = "1KS4-bdolJqlZ2gTGGBddorag-en4S_40"
 
 # 🔁 Google Drive'dan model indirme
 def download_from_google_drive(file_id, destination):
