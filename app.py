@@ -10,14 +10,14 @@ app = Flask(__name__)
 
 MODEL_PATH = "pet_disease_model_mobile.pt"
 
-# 🔁 Eğer model yoksa Google Drive'dan indir (requests ile)
+# 🔁 Google Drive'dan indirme fonksiyonu
 def download_from_google_drive(file_id, destination):
     URL = "https://drive.google.com/uc?export=download"
 
     session = requests.Session()
     response = session.get(URL, params={'id': file_id}, stream=True)
 
-    # Onay kodu gerekiyorsa (büyük dosya uyarısı)
+    # Dosya büyükse onay token'ı gerekir
     for key, value in response.cookies.items():
         if key.startswith('download_warning'):
             response = session.get(URL, params={'id': file_id, 'confirm': value}, stream=True)
@@ -28,29 +28,29 @@ def download_from_google_drive(file_id, destination):
             if chunk:
                 f.write(chunk)
 
-# 🔽 İndir
+# 🔽 Model indir
 if not os.path.exists(MODEL_PATH):
     print("🔽 Model indiriliyor...")
-    download_from_google_drive("1T7d8UrjCJDWKBzSo5Qm8raiU_dMqEK4P", MODEL_PATH)
+    download_from_google_drive("1LCoYcppMbLBZojgIPpoCKooYWPYEmgUp", MODEL_PATH)
     print("✅ Model başarıyla indirildi.")
 
-# 🧠 Model tanımı
+# 🧠 Model tanımı ve yükleme
 model = models.resnet18()
 model.fc = nn.Linear(model.fc.in_features, 6)
 model.load_state_dict(torch.jit.load(MODEL_PATH, map_location="cpu").state_dict())
 model.eval()
 
-# Sınıf isimleri
+# 🔖 Sınıf isimleri
 class_names = ['Dermatitis', 'Fungal_infections', 'Healthy', 'Hypersensitivity', 'demodicosis', 'ringworm']
 
-# Transform
+# 🔄 Görsel dönüştürme işlemi
 transform = transforms.Compose([
     transforms.Resize((224, 224)),
     transforms.ToTensor(),
     transforms.Normalize([0.5], [0.5])
 ])
 
-# Tahmin endpoint
+# 🧪 Tahmin API'si
 @app.route('/predict', methods=['POST'])
 def predict():
     if 'image' not in request.files:
@@ -66,7 +66,7 @@ def predict():
 
     return jsonify({'class': predicted_class})
 
-# Port ayarı
+# 🚀 Flask başlat
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port)
