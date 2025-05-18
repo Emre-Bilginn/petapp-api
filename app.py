@@ -7,30 +7,21 @@ from flask import Flask, request, jsonify
 
 app = Flask(__name__)
 
+# 🔗 Hugging Face model bağlantısı
 MODEL_PATH = "pet_disease_model_mobile.pt"
-GOOGLE_DRIVE_FILE_ID = "1KS4-bdolJqlZ2gTGGBddorag-en4S_40"
+MODEL_URL = "https://huggingface.co/emrebilgin/pet-disease-model/resolve/main/pet_disease_model_mobile.pt"
 
-# 🔁 Google Drive'dan model indirme
-def download_from_google_drive(file_id, destination):
-    URL = "https://drive.google.com/uc?export=download"
-    session = requests.Session()
-
-    response = session.get(URL, params={'id': file_id}, stream=True)
-
-    for key, value in response.cookies.items():
-        if key.startswith('download_warning'):
-            response = session.get(URL, params={'id': file_id, 'confirm': value}, stream=True)
-            break
-
+# 🔽 Hugging Face'den modeli indir
+def download_model(url, destination):
+    r = requests.get(url)
+    r.raise_for_status()
     with open(destination, "wb") as f:
-        for chunk in response.iter_content(32768):
-            if chunk:
-                f.write(chunk)
+        f.write(r.content)
 
-# 🔽 Model indir
+# 🔄 Dosya yoksa indir
 if not os.path.exists(MODEL_PATH):
     print("🔽 Model indiriliyor...")
-    download_from_google_drive(GOOGLE_DRIVE_FILE_ID, MODEL_PATH)
+    download_model(MODEL_URL, MODEL_PATH)
     print("✅ Model başarıyla indirildi.")
 
 # 🧠 TorchScript modeli yükle
@@ -53,13 +44,13 @@ def predict():
     if 'image' not in request.files:
         return jsonify({'error': 'Görsel yüklenemedi'}), 400
 
-    image = Image.open(request.files['image']).convert("RGB")  # type: ignore
-    image_tensor = transform(image).unsqueeze(0)  # type: ignore
+    image = Image.open(request.files['image']).convert("RGB") # type: ignore
+    image_tensor = transform(image).unsqueeze(0) # type: ignore
 
     with torch.no_grad():
         outputs = model(image_tensor)
         _, predicted = torch.max(outputs, 1)
-        predicted_class = class_names[predicted.item()]  # type: ignore
+        predicted_class = class_names[predicted.item()] # type: ignore
 
     return jsonify({'class': predicted_class})
 
